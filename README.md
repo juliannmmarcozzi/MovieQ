@@ -5,12 +5,17 @@ Pantallas
 
 -Inicio: 
 catálogo de películas organizadas en base a las más populares, las mejor valoradas y los últimos estrenos. Cada película va a tener su propio póster, título, año y puntuación.
+
 -Buscador: 
 buscar películas por nombre
+
 -Detalle de película: 
 mostrará sinopsis, duración, géneros, reparto y puntuación. También permitirá agregar películas a favoritos o marcarlas como vistas.
+
 -Mi lista: 
 sección para organizar películas favoritas, vistas y pendientes. Los cambios se guardarán en localStorage para que no desaparezcan al actualizar la página.
+
+
 
 Contenidos
 
