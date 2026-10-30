@@ -1,29 +1,75 @@
-# MovieQ
-Página web inspirada en IMDb para explorar películas, consultar su información y crear listas personales de películas favoritas, vistas o pendientes. Catálogo de películas cargadas local, con los pósters. la información, la sinopsis de la película, etc 
+# React + TypeScript + Vite
 
-Pantallas
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
--Inicio: 
-catálogo de películas organizadas en base a las más populares, las mejor valoradas y los últimos estrenos. Cada película va a tener su propio póster, título, año y puntuación.
+Currently, two official plugins are available:
 
--Buscador: 
-buscar películas por nombre
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
--Detalle de película: 
-mostrará sinopsis, duración, géneros, reparto y puntuación. También permitirá agregar películas a favoritos o marcarlas como vistas.
+## React Compiler
 
--Mi lista: 
-sección para organizar películas favoritas, vistas y pendientes. Los cambios se guardarán en localStorage para que no desaparezcan al actualizar la página.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
+## Expanding the ESLint configuration
 
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-Contenidos
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-Para búsquedas de la home vamos a usar useState, vamos a usar map y componentes y props para las cards de las películas
-TypeScript, Tailwind para el diseño y Context para las listas
-De los opcionales vamos a usar useEffect para sincronizar los datos con localStorage.
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-Objetivo de la página
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 
-El objetivo de la página es crear una página de películas atractiva y funcional, con navegación entre distintas secciones y funcionalidades interactivas, aplicando los contenidos aprendidos en React y distribuyendo el trabajo entre dos personas.
-map: recorre el catálogo y crea una card por película.
+```
+
+You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+
+```
