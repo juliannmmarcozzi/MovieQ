@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+
+import { useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 type Cuenta = {
   usuario: string;
@@ -7,14 +8,15 @@ type Cuenta = {
 };
 
 export default function CrearCuenta() {
+  const navigate = useNavigate();
+
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
-  const [mensaje, setMensaje] = useState('');
 
-  function registrarCuenta() {
+  function registrarCuenta(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setError('');
-    setMensaje('');
 
     if (usuario.trim() === '' || contrasena.trim() === '') {
       setError('Completá todos los campos');
@@ -41,44 +43,61 @@ export default function CrearCuenta() {
       contrasena: contrasena,
     };
 
-    const nuevasCuentas = [...cuentas, nuevaCuenta];
+    localStorage.setItem(
+      'cuentas',
+      JSON.stringify([...cuentas, nuevaCuenta])
+    );
 
-    localStorage.setItem('cuentas', JSON.stringify(nuevasCuentas));
-
-    setMensaje('Cuenta creada correctamente');
-    setUsuario('');
-    setContrasena('');
+    navigate('/login');
   }
 
   return (
-    <div>
-      <h1>Crear cuenta</h1>
+    <div className="min-h-screen bg-[#10182D] flex items-center justify-center px-4 font-sans">
+      <div className="w-full max-w-[370px] text-white">
+        <h1 className="text-2xl font-normal text-center mb-7">
+          Crear cuenta
+        </h1>
 
-      <input
-        type="text"
-        placeholder="Nombre de usuario"
-        value={usuario}
-        onChange={(e) => setUsuario(e.target.value)}
-      />
+        <form onSubmit={registrarCuenta} className="flex flex-col gap-4">
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            value={usuario}
+            onChange={(e) => setUsuario(e.target.value)}
+            autoComplete="username"
+            className="w-full bg-[#E5EEFC] text-[#10182D] px-3 py-3 rounded-sm outline-none text-sm"
+          />
 
-      <input
-        type="password"
-        placeholder="Contraseña"
-        value={contrasena}
-        onChange={(e) => setContrasena(e.target.value)}
-      />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={contrasena}
+            onChange={(e) => setContrasena(e.target.value)}
+            autoComplete="new-password"
+            className="w-full bg-[#E5EEFC] text-[#10182D] px-3 py-3 rounded-sm outline-none text-sm"
+          />
 
-      <button onClick={registrarCuenta}>
-        Crear cuenta
-      </button>
+          {error && (
+            <p className="text-red-400 text-sm">
+              {error}
+            </p>
+          )}
 
-      <p>
-        ¿Ya tenés cuenta? <Link to="/login">Iniciar sesión</Link>
-     </p>
+          <button
+            type="submit"
+            className="bg-[#243E70] hover:bg-[#2D4777] text-white py-3 rounded-sm text-sm font-normal cursor-pointer transition-colors"
+          >
+            Crear cuenta
+          </button>
+        </form>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      {mensaje && <p style={{ color: 'green' }}>{mensaje}</p>}
+        <p className="text-center text-sm text-gray-300 mt-6">
+          ¿Ya tenés cuenta?{' '}
+          <Link to="/login" className="text-white hover:underline">
+            Iniciar sesión
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
