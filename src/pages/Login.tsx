@@ -1,6 +1,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 type Cuenta = {
   usuario: string;
@@ -9,12 +10,13 @@ type Cuenta = {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { iniciarSesion } = useAuth();
 
   const [usuario, setUsuario] = useState('');
   const [contrasena, setContrasena] = useState('');
   const [error, setError] = useState('');
 
-  function iniciarSesion(e: FormEvent<HTMLFormElement>) {
+  function manejarLogin(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
 
@@ -40,7 +42,7 @@ export default function Login() {
       return;
     }
 
-    localStorage.setItem('usuarioActual', cuentaEncontrada.usuario);
+    iniciarSesion(cuentaEncontrada.usuario);
     navigate('/');
   }
 
@@ -51,7 +53,7 @@ export default function Login() {
           Iniciar sesión
         </h1>
 
-        <form onSubmit={iniciarSesion} className="flex flex-col gap-4">
+        <form onSubmit={manejarLogin} className="flex flex-col gap-4">
           <input
             type="text"
             placeholder="Usuario"

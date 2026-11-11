@@ -1,11 +1,13 @@
 
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
   const navigate = useNavigate();
+  const { usuario, cerrarSesion } = useAuth();
 
-  function cerrarSesion() {
-    localStorage.removeItem('usuarioActual');
+  function salir() {
+    cerrarSesion();
     navigate('/login');
   }
 
@@ -17,21 +19,43 @@ export default function Header() {
         </Link>
 
         <nav className="flex items-center gap-6 text-sm">
-          <Link to="/" className="text-gray-300 hover:text-white">
+          <Link
+            to="/"
+            className="text-gray-300 hover:text-white"
+          >
             Inicio
           </Link>
 
-          <Link to="/#peliculas" className="text-gray-300 hover:text-white">
+          <Link
+            to="/#peliculas"
+            className="text-gray-300 hover:text-white"
+          >
             Buscar
           </Link>
 
-          <button
-            type="button"
-            onClick={cerrarSesion}
-            className="text-gray-300 hover:text-white cursor-pointer"
+          <Link
+            to="/mi-lista"
+            className="text-gray-300 hover:text-white"
           >
-            Cerrar sesión
-          </button>
+            Mi lista
+          </Link>
+
+          {usuario ? (
+            <button
+              type="button"
+              onClick={salir}
+              className="text-gray-300 hover:text-white cursor-pointer"
+            >
+              Cerrar sesión
+            </button>
+          ) : (
+            <Link
+              to="/login"
+              className="text-gray-300 hover:text-white"
+            >
+              Iniciar sesión
+            </Link>
+          )}
         </nav>
       </div>
     </header>

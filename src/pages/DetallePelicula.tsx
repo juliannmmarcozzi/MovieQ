@@ -3,9 +3,19 @@ import { Link, useParams } from 'react-router-dom';
 import { peliculas } from '../data/peliculas';
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
+import { useMovies } from '../context/MovieContext';
 
 export default function DetallePelicula() {
   const { id } = useParams();
+
+  const {
+    favoritas,
+    vistas,
+    pendientes,
+    toggleFavorita,
+    toggleVista,
+    togglePendiente,
+  } = useMovies();
 
   const pelicula = peliculas.find(
     (p) => p.id === Number(id)
@@ -26,6 +36,10 @@ export default function DetallePelicula() {
       </div>
     );
   }
+
+  const esFavorita = favoritas.includes(pelicula.id);
+  const estaVista = vistas.includes(pelicula.id);
+  const estaPendiente = pendientes.includes(pelicula.id);
 
   const recomendadas = peliculas
     .filter(
@@ -72,16 +86,44 @@ export default function DetallePelicula() {
             <div className="flex flex-wrap gap-3 mb-10">
               <button
                 type="button"
-                className="bg-[#243E70] hover:bg-[#2D4777] px-5 py-3 text-sm cursor-pointer transition-colors"
+                onClick={() => toggleFavorita(pelicula.id)}
+                className={`px-5 py-3 text-sm cursor-pointer transition-colors ${
+                  esFavorita
+                    ? 'bg-red-700 hover:bg-red-800'
+                    : 'bg-[#243E70] hover:bg-[#2D4777]'
+                }`}
               >
-                Agregar a Mi lista
+                {esFavorita
+                  ? '♥ Quitar de favoritos'
+                  : '♡ Agregar a favoritos'}
               </button>
 
               <button
                 type="button"
-                className="border border-white/20 hover:bg-white/10 px-5 py-3 text-sm cursor-pointer transition-colors"
+                onClick={() => toggleVista(pelicula.id)}
+                className={`px-5 py-3 text-sm cursor-pointer transition-colors ${
+                  estaVista
+                    ? 'bg-green-700 hover:bg-green-800'
+                    : 'border border-white/20 hover:bg-white/10'
+                }`}
               >
-                Marcar como vista
+                {estaVista
+                  ? '✓ Vista'
+                  : 'Marcar como vista'}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => togglePendiente(pelicula.id)}
+                className={`px-5 py-3 text-sm cursor-pointer transition-colors ${
+                  estaPendiente
+                    ? 'bg-[#375A91] hover:bg-[#456CA8]'
+                    : 'border border-white/20 hover:bg-white/10'
+                }`}
+              >
+                {estaPendiente
+                  ? '✓ En pendientes'
+                  : 'Ver más tarde'}
               </button>
             </div>
 
