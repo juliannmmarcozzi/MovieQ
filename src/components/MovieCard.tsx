@@ -1,5 +1,6 @@
 
 import { Link } from 'react-router-dom';
+import Poster from './Poster';
 
 type MovieCardProps = {
   id: number;
@@ -21,13 +22,7 @@ export default function MovieCard({
       to={`/pelicula/${id}`}
       className="block bg-[#182540] overflow-hidden cursor-pointer hover:bg-[#223354] transition-colors"
     >
-      <div className="w-full aspect-[2/3] bg-[#243E70]">
-        <img
-          src={imagen}
-          alt={titulo}
-          className="w-full h-full object-cover"
-        />
-      </div>
+      <Poster imagen={imagen} titulo={titulo} />
 
       <div className="p-3">
         <h3 className="text-sm font-normal mb-1">
@@ -35,7 +30,7 @@ export default function MovieCard({
         </h3>
 
         <div className="flex justify-between text-xs text-gray-300">
-          <span>{anio}</span>
+          <span>{anio || '—'}</span>
           <span>★ {puntuacion}</span>
         </div>
       </div>

@@ -1,6 +1,10 @@
 
 import { Link, useParams } from 'react-router-dom';
-import { peliculas } from '../data/peliculas';
+import { useCallback } from 'react';
+import { obtenerDetalle } from '../services/tmdb';
+import { useSolicitud } from '../hooks/useSolicitud';
+import Poster from '../components/Poster';
+import Resenas from '../components/Resenas';
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
 import { useMovies } from '../context/MovieContext';
@@ -17,9 +21,8 @@ export default function DetallePelicula() {
     togglePendiente,
   } = useMovies();
 
-  const pelicula = peliculas.find(
-    (p) => p.id === Number(id)
-  );
+  const cargar = useCallback((signal: AbortSignal) => obtenerDetalle(Number(id), signal), [id]);
+  const { datos: pelicula, cargando, error } = useSolicitud(id ?? '', cargar);
 
   if (!pelicula) {
     return (
@@ -27,7 +30,9 @@ export default function DetallePelicula() {
         <Header />
 
         <main className="max-w-6xl mx-auto px-6 py-10">
-          <p className="mb-4">No se encontró la película.</p>
+          <p className="mb-4" role={error ? "alert" : "status"}>
+            {cargando ? "Cargando película..." : error || "No se encontró la película."}
+          </p>
 
           <Link to="/" className="text-blue-300 hover:text-white">
             Volver al inicio
@@ -41,13 +46,7 @@ export default function DetallePelicula() {
   const estaVista = vistas.includes(pelicula.id);
   const estaPendiente = pendientes.includes(pelicula.id);
 
-  const recomendadas = peliculas
-    .filter(
-      (p) =>
-        p.genero === pelicula.genero &&
-        p.id !== pelicula.id
-    )
-    .slice(0, 4);
+  const recomendadas = pelicula.recomendadas;
 
   return (
     <div className="min-h-screen bg-[#10182D] text-white font-sans">
@@ -56,11 +55,7 @@ export default function DetallePelicula() {
       <main className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex flex-col md:flex-row gap-10">
           <div className="w-full max-w-[270px] shrink-0">
-            <img
-              src={pelicula.imagen}
-              alt={pelicula.titulo}
-              className="w-full object-cover"
-            />
+            <Poster imagen={pelicula.imagen} titulo={pelicula.titulo} />
           </div>
 
           <div className="flex-1">
@@ -69,9 +64,9 @@ export default function DetallePelicula() {
             </h1>
 
             <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-7">
-              <span>{pelicula.anio}</span>
-              <span>★ {pelicula.puntuacion}</span>
-              <span>{pelicula.duracion} min</span>
+              <span>{pelicula.anio || '—'}</span>
+              <span>★ {pelicula.puntuacion} (TMDB)</span>
+              <span>{pelicula.duracion ? pelicula.duracion + ' min' : 'Duración no disponible'}</span>
               <span>{pelicula.genero}</span>
             </div>
 
@@ -143,6 +138,8 @@ export default function DetallePelicula() {
             </div>
           </div>
         </div>
+
+        <Resenas key={pelicula.id} peliculaId={pelicula.id} />
 
         <section className="mt-14">
           <h2 className="text-xl mb-6">

@@ -27,7 +27,7 @@ export default function Header() {
           </Link>
 
           <Link
-            to="/#peliculas"
+            to="/#buscar"
             className="text-gray-300 hover:text-white"
           >
             Buscar

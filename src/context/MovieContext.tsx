@@ -18,41 +18,60 @@ type MovieContextType = {
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
 
+// Los IDs anteriores eran internos; ahora se guardan los IDs reales de TMDB.
+const idsAnteriores: Record<number, number> = {
+  1: 597, 2: 19995, 3: 299534, 4: 634649, 5: 872585,
+  6: 157336, 7: 475557, 8: 603, 9: 106646,
+};
+
+function leerIds(categoria: string, usuario: string | null): number[] {
+  try {
+    const actuales = localStorage.getItem(`tmdb_${categoria}_${usuario}`);
+    if (actuales !== null) {
+      const ids = JSON.parse(actuales);
+      return Array.isArray(ids) ? ids.filter((id) => Number.isInteger(id) && id > 0) : [];
+    }
+    const anteriores = JSON.parse(localStorage.getItem(`${categoria}_${usuario}`) ?? '[]');
+    return Array.isArray(anteriores)
+      ? [...new Set<number>(anteriores.map((id: number) => idsAnteriores[id]).filter(Boolean))]
+      : [];
+  } catch {
+    return [];
+  }
+}
+
 export function MovieProvider({ children }: { children: ReactNode }) {
   const usuario = localStorage.getItem('usuarioActual');
 
   const [favoritas, setFavoritas] = useState<number[]>(() => {
-    const guardadas = localStorage.getItem(`favoritas_${usuario}`);
-    return guardadas ? JSON.parse(guardadas) : [];
+    return leerIds('favoritas', usuario);
   });
 
   const [vistas, setVistas] = useState<number[]>(() => {
-    const guardadas = localStorage.getItem(`vistas_${usuario}`);
-    return guardadas ? JSON.parse(guardadas) : [];
+    return leerIds('vistas', usuario);
   });
 
   const [pendientes, setPendientes] = useState<number[]>(() => {
-    const guardadas = localStorage.getItem(`pendientes_${usuario}`);
-    return guardadas ? JSON.parse(guardadas) : [];
+    return leerIds('pendientes', usuario);
   });
 
   useEffect(() => {
     localStorage.setItem(
-      `favoritas_${usuario}`,
+      `tmdb_favoritas_${usuario}`,
       JSON.stringify(favoritas)
     );
   }, [favoritas, usuario]);
 
   useEffect(() => {
     localStorage.setItem(
-      `vistas_${usuario}`,
+      `tmdb_vistas_${usuario}`,
       JSON.stringify(vistas)
     );
   }, [vistas, usuario]);
 
   useEffect(() => {
     localStorage.setItem(
-      `pendientes_${usuario}`,
+      `tmdb_pendientes_${usuario}`,
       JSON.stringify(pendientes)
     );
   }, [pendientes, usuario]);

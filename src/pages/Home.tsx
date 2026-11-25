@@ -1,6 +1,8 @@
 
-import { useState } from 'react';
-import { peliculas } from '../data/peliculas';
+import { useCallback, useState } from 'react';
+import { buscarPeliculas } from '../services/tmdb';
+import { useSolicitud } from '../hooks/useSolicitud';
+import SearchBar from '../components/SearchBar';
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
 
@@ -8,9 +10,10 @@ export default function Home() {
   const usuario = localStorage.getItem('usuarioActual');
   const [busqueda, setBusqueda] = useState('');
 
-  const peliculasFiltradas = peliculas.filter((pelicula) =>
-    pelicula.titulo.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const texto = busqueda.trim();
+  const cargar = useCallback((signal: AbortSignal) => buscarPeliculas(texto, signal), [texto]);
+  const { datos, cargando, error } = useSolicitud(texto, cargar, texto ? 350 : 0);
+  const peliculasFiltradas = datos ?? [];
 
   return (
     <div className="min-h-screen bg-[#10182D] text-white font-sans">
@@ -37,19 +40,17 @@ export default function Home() {
         <section id="peliculas">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <h2 className="text-xl font-normal">
-              Películas
+              {texto ? 'Resultados de búsqueda' : 'Películas populares'}
             </h2>
 
-            <input
-              type="text"
-              placeholder="Buscar películas..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="bg-[#E5EEFC] text-[#10182D] px-3 py-2.5 text-sm outline-none w-full sm:w-72 rounded-sm"
-            />
+            <SearchBar busqueda={busqueda} setBusqueda={setBusqueda} />
           </div>
 
-          {peliculasFiltradas.length === 0 ? (
+          {cargando ? (
+            <p role="status" className="text-gray-400 text-sm">Cargando películas...</p>
+          ) : error ? (
+            <p role="alert" className="text-red-300 text-sm">{error}</p>
+          ) : peliculasFiltradas.length === 0 ? (
             <p className="text-gray-400 text-sm">
               No se encontraron películas.
             </p>

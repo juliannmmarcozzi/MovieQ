@@ -9,6 +9,7 @@ import CrearCuenta from './pages/CrearCuenta';
 import Home from './pages/Home';
 import DetallePelicula from './pages/DetallePelicula';
 import MiListaPeliculas from './pages/MiListaPeliculas';
+import Creditos from './components/Creditos';
 
 function Rutas() {
   const { usuario } = useAuth();
@@ -22,6 +23,7 @@ function Rutas() {
         <Route path="/pelicula/:id" element={<DetallePelicula />} />
         <Route path="/mi-lista" element={<MiListaPeliculas />} />
       </Routes>
+      <Creditos />
     </MovieProvider>
   );
 }

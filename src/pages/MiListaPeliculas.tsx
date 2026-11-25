@@ -1,8 +1,9 @@
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useSolicitud } from '../hooks/useSolicitud';
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
-import { peliculas } from '../data/peliculas';
+import { obtenerPelicula } from '../services/tmdb';
 import { useMovies } from '../context/MovieContext';
 
 type Categoria = 'favoritas' | 'vistas' | 'pendientes';
@@ -19,9 +20,14 @@ export default function MiListaPeliculas() {
       ? vistas
       : pendientes;
 
-  const peliculasSeleccionadas = peliculas.filter((pelicula) =>
-    idsSeleccionados.includes(pelicula.id)
-  );
+  const cargar = useCallback(async (signal: AbortSignal) => {
+    const resultados = await Promise.allSettled(idsSeleccionados.map((id) => obtenerPelicula(id, signal)));
+    const peliculas = resultados.flatMap((resultado) => resultado.status === 'fulfilled' ? [resultado.value] : []);
+    const errores = resultados.filter((resultado) => resultado.status === 'rejected').length;
+    return { peliculas, errores };
+  }, [idsSeleccionados]);
+  const { datos, cargando, error } = useSolicitud(categoria + ':' + idsSeleccionados.join(','), cargar);
+  const peliculasSeleccionadas = datos?.peliculas ?? [];
 
   return (
     <div className="min-h-screen bg-[#10182D] text-white font-sans">
@@ -74,7 +80,15 @@ export default function MiListaPeliculas() {
           </button>
         </div>
 
-        {peliculasSeleccionadas.length === 0 ? (
+        {datos && datos.errores > 0 && (
+          <p role="alert" className="text-red-300 text-sm mb-5">No se pudieron cargar {datos.errores} películas. Revisá la conexión y el token de TMDB.</p>
+        )}
+
+        {cargando ? (
+          <p role="status" className="text-gray-400 text-sm">Cargando tu lista...</p>
+        ) : error ? (
+          <p role="alert" className="text-red-300 text-sm">{error}</p>
+        ) : idsSeleccionados.length === 0 ? (
           <div className="bg-[#182540] px-8 py-12 text-center">
             <p className="text-gray-300 text-sm mb-5">
               Todavía no tenés películas en esta lista.
