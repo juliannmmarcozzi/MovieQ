@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -27,7 +26,7 @@ export default function Header() {
           </Link>
 
           <Link
-            to="/#peliculas"
+            to="/#buscar"
             className="text-gray-300 hover:text-white"
           >
             Buscar

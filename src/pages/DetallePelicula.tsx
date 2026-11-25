@@ -1,12 +1,39 @@
-
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { peliculas } from '../data/peliculas';
+
+import {
+  obtenerDetallePelicula,
+  type PeliculaDetalle,
+} from '../data/peliculas';
+
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
+import Resenas from '../components/Resenas';
 import { useMovies } from '../context/MovieContext';
+
+type Resultado = {
+  id: string;
+  pelicula: PeliculaDetalle | null;
+  error: string;
+};
 
 export default function DetallePelicula() {
   const { id } = useParams();
+
+  const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [imagenFallida, setImagenFallida] = useState('');
+
+  const peliculaId = id ?? '';
+
+  const cargando = resultado?.id !== peliculaId;
+
+  const pelicula = cargando
+    ? null
+    : resultado?.pelicula ?? null;
+
+  const error = cargando
+    ? ''
+    : resultado?.error ?? '';
 
   const {
     favoritas,
@@ -17,17 +44,53 @@ export default function DetallePelicula() {
     togglePendiente,
   } = useMovies();
 
-  const pelicula = peliculas.find(
-    (p) => p.id === Number(id)
-  );
+  useEffect(() => {
+    const controlador = new AbortController();
 
-  if (!pelicula) {
+    async function cargarPelicula() {
+      try {
+        const datos = await obtenerDetallePelicula(
+          Number(peliculaId),
+          controlador.signal
+        );
+
+        if (!controlador.signal.aborted) {
+          setResultado({
+            id: peliculaId,
+            pelicula: datos,
+            error: '',
+          });
+        }
+      } catch (error) {
+        if (!controlador.signal.aborted) {
+          setResultado({
+            id: peliculaId,
+            pelicula: null,
+            error:
+              error instanceof Error
+                ? error.message
+                : 'No se pudo cargar la película.',
+          });
+        }
+      }
+    }
+
+    cargarPelicula();
+
+    return () => controlador.abort();
+  }, [peliculaId]);
+
+  if (cargando || !pelicula) {
     return (
       <div className="min-h-screen bg-[#10182D] text-white font-sans">
         <Header />
 
         <main className="max-w-6xl mx-auto px-6 py-10">
-          <p className="mb-4">No se encontró la película.</p>
+          <p className="mb-4">
+            {cargando
+              ? 'Cargando película...'
+              : error || 'No se encontró la película.'}
+          </p>
 
           <Link to="/" className="text-blue-300 hover:text-white">
             Volver al inicio
@@ -41,13 +104,7 @@ export default function DetallePelicula() {
   const estaVista = vistas.includes(pelicula.id);
   const estaPendiente = pendientes.includes(pelicula.id);
 
-  const recomendadas = peliculas
-    .filter(
-      (p) =>
-        p.genero === pelicula.genero &&
-        p.id !== pelicula.id
-    )
-    .slice(0, 4);
+  const recomendadas = pelicula.recomendadas;
 
   return (
     <div className="min-h-screen bg-[#10182D] text-white font-sans">
@@ -56,11 +113,20 @@ export default function DetallePelicula() {
       <main className="max-w-6xl mx-auto px-6 py-10">
         <div className="flex flex-col md:flex-row gap-10">
           <div className="w-full max-w-[270px] shrink-0">
-            <img
-              src={pelicula.imagen}
-              alt={pelicula.titulo}
-              className="w-full object-cover"
-            />
+            {pelicula.imagen && imagenFallida !== pelicula.imagen ? (
+              <img
+                src={pelicula.imagen}
+                alt={pelicula.titulo}
+                onError={() => setImagenFallida(pelicula.imagen)}
+                className="w-full object-cover"
+              />
+            ) : (
+              <div className="aspect-[2/3] bg-[#243E70] flex items-center justify-center">
+                <p className="text-gray-300 text-sm">
+                  Sin imagen disponible
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex-1">
@@ -69,9 +135,15 @@ export default function DetallePelicula() {
             </h1>
 
             <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-7">
-              <span>{pelicula.anio}</span>
-              <span>★ {pelicula.puntuacion}</span>
-              <span>{pelicula.duracion} min</span>
+              <span>{pelicula.anio || 'Sin año'}</span>
+              <span>★ {pelicula.puntuacion} (TMDB)</span>
+
+              <span>
+                {pelicula.duracion
+                  ? `${pelicula.duracion} min`
+                  : 'Duración no disponible'}
+              </span>
+
               <span>{pelicula.genero}</span>
             </div>
 
@@ -132,17 +204,28 @@ export default function DetallePelicula() {
             </h2>
 
             <div className="flex flex-wrap gap-3">
-              {pelicula.reparto.map((actor) => (
-                <div
-                  key={actor}
-                  className="bg-[#182540] px-4 py-3 text-sm text-gray-200"
-                >
-                  {actor}
-                </div>
-              ))}
+              {pelicula.reparto.length === 0 ? (
+                <p className="text-gray-400 text-sm">
+                  No hay información del reparto.
+                </p>
+              ) : (
+                pelicula.reparto.map((actor) => (
+                  <div
+                    key={actor}
+                    className="bg-[#182540] px-4 py-3 text-sm text-gray-200"
+                  >
+                    {actor}
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
+
+        <Resenas
+          key={pelicula.id}
+          peliculaId={pelicula.id}
+        />
 
         <section className="mt-14">
           <h2 className="text-xl mb-6">

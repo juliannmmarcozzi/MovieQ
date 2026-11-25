@@ -1,16 +1,29 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-import { useState } from 'react';
 import Header from '../components/Header';
 import MovieCard from '../components/MovieCard';
-import { peliculas } from '../data/peliculas';
+
+import {
+  obtenerPelicula,
+  type Pelicula,
+} from '../data/peliculas';
+
 import { useMovies } from '../context/MovieContext';
 
 type Categoria = 'favoritas' | 'vistas' | 'pendientes';
+
+type Resultado = {
+  clave: string;
+  peliculas: Pelicula[];
+  errores: number;
+};
 
 export default function MiListaPeliculas() {
   const { favoritas, vistas, pendientes } = useMovies();
 
   const [categoria, setCategoria] = useState<Categoria>('favoritas');
+  const [resultado, setResultado] = useState<Resultado | null>(null);
 
   const idsSeleccionados =
     categoria === 'favoritas'
@@ -19,22 +32,62 @@ export default function MiListaPeliculas() {
       ? vistas
       : pendientes;
 
-  const peliculasSeleccionadas = peliculas.filter((pelicula) =>
-    idsSeleccionados.includes(pelicula.id)
-  );
+  const clave = `${categoria}:${idsSeleccionados.join(',')}`;
+
+  const cargando = resultado?.clave !== clave;
+
+  const peliculasSeleccionadas = cargando
+    ? []
+    : resultado?.peliculas ?? [];
+
+  const errores = cargando
+    ? 0
+    : resultado?.errores ?? 0;
+
+  useEffect(() => {
+    const controlador = new AbortController();
+
+    async function cargarPeliculas() {
+      const resultados = await Promise.allSettled(
+        idsSeleccionados.map((id) =>
+          obtenerPelicula(id, controlador.signal)
+        )
+      );
+
+      const peliculas: Pelicula[] = [];
+
+      let errores = 0;
+
+      resultados.forEach((resultado) => {
+        if (resultado.status === 'fulfilled') {
+          peliculas.push(resultado.value);
+        } else {
+          errores++;
+        }
+      });
+
+      if (!controlador.signal.aborted) {
+        setResultado({
+          clave,
+          peliculas,
+          errores,
+        });
+      }
+    }
+
+    cargarPeliculas();
+
+    return () => controlador.abort();
+  }, [idsSeleccionados, clave]);
 
   return (
     <div className="min-h-screen bg-[#10182D] text-white font-sans">
       <Header />
 
       <main className="max-w-6xl mx-auto px-6 py-10">
-        <h1 className="text-3xl font-normal mb-3">
+        <h1 className="text-3xl font-normal mb-8">
           Mi lista
         </h1>
-
-        <p className="text-gray-300 text-sm mb-8">
-          Organizá tus películas favoritas, vistas y pendientes.
-        </p>
 
         <div className="flex flex-wrap gap-3 mb-10">
           <button
@@ -74,18 +127,28 @@ export default function MiListaPeliculas() {
           </button>
         </div>
 
-        {peliculasSeleccionadas.length === 0 ? (
+        {errores > 0 && (
+          <p className="text-red-400 text-sm mb-5">
+            Error
+          </p>
+        )}
+
+        {cargando ? (
+          <p className="text-gray-400 text-sm">
+            Cargando...
+          </p>
+        ) : idsSeleccionados.length === 0 ? (
           <div className="bg-[#182540] px-8 py-12 text-center">
             <p className="text-gray-300 text-sm mb-5">
-              Todavía no tenés películas en esta lista.
+              Lista vacía
             </p>
 
-            <a
-              href="/"
+            <Link
+              to="/"
               className="inline-block bg-[#243E70] hover:bg-[#2D4777] px-6 py-3 text-sm transition-colors"
             >
               Explorar películas
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
